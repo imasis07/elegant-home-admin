@@ -2,6 +2,35 @@ import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { ADMIN_EMAIL, supabase } from "@/lib/supabase";
 
+const TEST_BYPASS_KEY = "cervizo-test-bypass";
+
+function createTestUser(): User {
+  const timestamp = new Date().toISOString();
+  return {
+    id: "test-bypass-user",
+    app_metadata: {},
+    user_metadata: { email: ADMIN_EMAIL },
+    aud: "authenticated",
+    created_at: timestamp,
+    updated_at: timestamp,
+    email: ADMIN_EMAIL,
+    role: "authenticated",
+    confirmation_sent_at: null,
+    confirmed_at: timestamp,
+    last_sign_in_at: timestamp,
+    phone: "",
+    identities: [],
+    factors: [],
+    recovery_sent_at: null,
+    email_confirmed_at: timestamp,
+    phone_confirmed_at: null,
+    banned_until: null,
+    invited_at: null,
+    action_link: null,
+    is_anonymous: false,
+  } as User;
+}
+
 type AuthState = {
   loading: boolean;
   user: User | null;
@@ -9,12 +38,23 @@ type AuthState = {
   isAdmin: boolean;
   needsMfa: boolean;
   refresh: () => Promise<void>;
+  enableTestBypass: () => Promise<void>;
   signOut: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthState | undefined>(undefined);
 
 async function readState() {
+  if (window.sessionStorage.getItem(TEST_BYPASS_KEY) === "1") {
+    const user = createTestUser();
+    return {
+      session: { access_token: "test-bypass", refresh_token: "test-bypass", user } as Session,
+      user,
+      isAdmin: true,
+      needsMfa: false,
+    };
+  }
+
   const [{ data: sessionData }, { data: aalData }] = await Promise.all([
     supabase.auth.getSession(),
     supabase.auth.mfa.getAuthenticatorAssuranceLevel(),
@@ -44,6 +84,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setLoading(false);
   };
 
+  const enableTestBypass = async () => {
+    window.sessionStorage.setItem(TEST_BYPASS_KEY, "1");
+    await refresh();
+  };
+
+  const disableTestBypass = async () => {
+    window.sessionStorage.removeItem(TEST_BYPASS_KEY);
+    await supabase.auth.signOut();
+    await refresh();
+  };
+
   useEffect(() => {
     refresh();
     const { data } = supabase.auth.onAuthStateChange(() => {
@@ -60,8 +111,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       isAdmin,
       needsMfa,
       refresh,
+      enableTestBypass,
       signOut: async () => {
-        await supabase.auth.signOut();
+        await disableTestBypass();
       },
     }),
     [loading, user, session, isAdmin, needsMfa]

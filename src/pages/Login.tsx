@@ -5,7 +5,7 @@ import { useAuth } from "@/auth/AuthContext";
 
 const Login = () => {
   const navigate = useNavigate();
-  const { user, isAdmin, needsMfa } = useAuth();
+  const { user, isAdmin, needsMfa, enableTestBypass } = useAuth();
   const [email, setEmail] = useState(ADMIN_EMAIL);
   const [otp, setOtp] = useState("");
   const [step, setStep] = useState<"email" | "otp">("email");
@@ -133,6 +133,19 @@ const Login = () => {
             </button>
           </form>
         )}
+
+        <button
+          type="button"
+          onClick={async () => {
+            setError("");
+            setMessage("");
+            await enableTestBypass();
+            navigate("/", { replace: true });
+          }}
+          className="mt-4 h-11 w-full rounded-lg border border-dashed border-primary/40 bg-primary/5 text-sm font-medium text-primary hover:bg-primary/10"
+        >
+          Test bypass to dashboard
+        </button>
 
         {message ? <p className="mt-4 text-xs text-emerald-600">{message}</p> : null}
         {error ? <p className="mt-2 text-xs text-destructive">{error}</p> : null}
