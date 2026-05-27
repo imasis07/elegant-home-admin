@@ -147,6 +147,8 @@ const Login = () => {
           Test bypass to dashboard
         </button>
 
+        <p className="mt-2 text-center text-xs text-muted-foreground">hello</p>
+
         {message ? <p className="mt-4 text-xs text-emerald-600">{message}</p> : null}
         {error ? <p className="mt-2 text-xs text-destructive">{error}</p> : null}
       </div>
