@@ -147,6 +147,19 @@ const Login = () => {
           Test bypass to dashboard
         </button>
 
+        <button
+          type="button"
+          onClick={async () => {
+            setError("");
+            setMessage("");
+            await enableTestBypass();
+            navigate("/", { replace: true });
+          }}
+          className="mt-2 h-11 w-full rounded-lg border border-dashed border-primary/40 bg-primary/5 text-sm font-medium text-primary hover:bg-primary/10"
+        >
+          Test bypass (alternate)
+        </button>
+
         {message ? <p className="mt-4 text-xs text-emerald-600">{message}</p> : null}
         {error ? <p className="mt-2 text-xs text-destructive">{error}</p> : null}
       </div>
